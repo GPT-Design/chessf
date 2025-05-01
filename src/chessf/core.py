@@ -24,7 +24,7 @@ def calc_complexity(board) -> float:
     legal = board.legal_moves.count() or 1
     return xp.log2(legal).item()
 
-def analyse_pgn(pgn_path: str | Path) -> pd.Dataframe:
+def analyse_pgn(pgn_path: str | Path) -> pd.DataFrame:
     """Return a DataFrame with ply-by-ply complexity for *one* PGN."""
     import pandas as pd
     with open(pgn_path, "r", encoding="utf-8") as fh:
