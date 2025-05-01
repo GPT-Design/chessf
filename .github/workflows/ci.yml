@@ -32,7 +32,7 @@ jobs:
           pyinstaller --onefile src/chessf/cli.py \
                         --name chessf \
                         --console
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v2
         with:
           name: chessf-distribution
           path: |
