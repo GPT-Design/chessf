@@ -5,6 +5,7 @@ from pathlib import Path
 
 # ─── third-party imports ──────────────────────────────────────────────────────
 import chess.pgn
+import pandas as pd
 
 # ─── array backend ─────────────────────────────────────────────────────────────
 try:
