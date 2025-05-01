@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - run: pip install poetry
+      - run: poetry install
+      - run: poetry run pytest -q
+
+  package:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - run: pip install poetry pyinstaller
+      - run: poetry install --no-dev
+      - run: poetry build
+      - run: |
+          pyinstaller --onefile src/chessf/cli.py \
+                        --name chessf \
+                        --console
+      - uses: actions/upload-artifact@v3
+        with:
+          name: chessf-distribution
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/chessf.exe
