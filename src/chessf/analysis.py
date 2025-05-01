@@ -84,7 +84,7 @@ def prime_slice(arr: xp.ndarray) -> Tuple[list[int], list[int]]:
 def regression_summary(arr: xp.ndarray) -> str:
     linregress = _safe_linregress()
     y = _to_numpy(arr)
-    x = xp.arange(1, len(y) + 1)
+    x = _to_numpy(xp.arange(1, len(y) + 1))   # ← convert Cupy → NumPy too
     slope, intercept, r, p, stderr = linregress(x, y)
     return (
         f"Slope: {slope:.5f}, Intercept: {intercept:.5f}, "
