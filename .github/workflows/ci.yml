@@ -6,33 +6,54 @@ on:
   pull_request:
 
 jobs:
-  test-and-build:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.12
-      - run: pip install poetry
-      - run: poetry install
-      - run: poetry run pytest -q
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+
+      - name: Run tests
+        run: poetry run pytest -q
 
   package:
-    needs: test-and-build
+    needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.12
-      - run: pip install poetry pyinstaller
-      - run: poetry install --no-dev
-      - run: poetry build
-      - run: |
+          python-version: '3.12'
+
+      - name: Install packagers
+        run: |
+          pip install poetry pyinstaller
+
+      - name: Build project
+        run: |
+          poetry install --no-dev
+          poetry build
+
+      - name: Build single-file exe
+        run: |
           pyinstaller --onefile src/chessf/cli.py \
-                        --name chessf \
-                        --console
-      - uses: actions/upload-artifact@v2
+                      --name chessf \
+                      --console
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
           name: chessf-distribution
           path: |
