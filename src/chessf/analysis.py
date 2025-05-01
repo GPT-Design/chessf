@@ -1,7 +1,8 @@
+# src/chessf/analysis.py
+
 from __future__ import annotations
 
 import io
-import os
 from pathlib import Path
 from typing import Iterable, Tuple
 
@@ -10,24 +11,23 @@ import rich
 
 # ─── array backend ─────────────────────────────────────────────────────────────
 try:
-    import cupy as xp          # GPU
-    def _to_numpy(a):          # cupy → numpy helper
-        return a.get()
-except ModuleNotFoundError:    # CPU
-    import numpy as xp
+    import cupy as xp          # GPU first
     def _to_numpy(a):
-        return a               # already numpy
+        return a.get()
+except ModuleNotFoundError:
+    import numpy as xp         # CPU fallback
+    def _to_numpy(a):
+        return a               # already NumPy
 
-# ─── heavy-math (lazy) ─────────────────────────────────────────────────────────
+# ─── lazy heavy-math helper ────────────────────────────────────────────────────
 def _safe_linregress():
     try:
         from scipy.stats import linregress
-    except ModuleNotFoundError as e:        # pragma: no cover
+    except ModuleNotFoundError as e:
         raise ImportError(
             "SciPy required for regression — install with: pip install chessf[stats]"
         ) from e
     return linregress
-
 
 # ─── complexity weights ────────────────────────────────────────────────────────
 MOVE_COMPLEXITY = {
@@ -38,8 +38,7 @@ MOVE_COMPLEXITY = {
     "mate": 10,
 }
 
-
-# ─── per-game analysis ─────────────────────────────────────────────────────────
+# ─── per-game trace ─────────────────────────────────────────────────────────────
 def analyse_game(pgn_text: str) -> xp.ndarray:
     game = chess.pgn.read_game(io.StringIO(pgn_text))
     if game is None:
@@ -68,29 +67,25 @@ def analyse_game(pgn_text: str) -> xp.ndarray:
 
     return xp.asarray(trace)
 
-
-# ─── helpers for prime slice / regression ──────────────────────────────────────
+# ─── prime/regression helpers ─────────────────────────────────────────────────
 def _primes_up_to(n: int) -> Iterable[int]:
     for k in range(2, n + 1):
         if all(k % p for p in range(2, int(k**0.5) + 1)):
             yield k
 
-
 def prime_slice(arr: xp.ndarray) -> Tuple[list[int], list[int]]:
     primes = list(_primes_up_to(len(arr)))
     return primes, [int(arr[i - 1]) for i in primes]
 
-
 def regression_summary(arr: xp.ndarray) -> str:
     linregress = _safe_linregress()
     y = _to_numpy(arr)
-    x = _to_numpy(xp.arange(1, len(y) + 1))   # ← convert Cupy → NumPy too
+    x = _to_numpy(xp.arange(1, len(y) + 1))
     slope, intercept, r, p, stderr = linregress(x, y)
     return (
         f"Slope: {slope:.5f}, Intercept: {intercept:.5f}, "
         f"R={r:.5f}, p={p:.3g}, stderr={stderr:.5f}"
     )
-
 
 # ─── folder-level driver ───────────────────────────────────────────────────────
 def analyse_folder(pgn_dir: Path, *, make_plots: bool = True) -> None:
@@ -109,10 +104,17 @@ def analyse_folder(pgn_dir: Path, *, make_plots: bool = True) -> None:
         plt = None
         make_plots = False
 
-    summary = []
+    summary: list[str] = []
 
     for pgn_path in pgn_files:
-        trace = analyse_game(pgn_path.read_text(encoding="utf-8"))
+        # ─── robust file read with UTF-8 then Latin-1 fallback ──────────────
+        try:
+            text = pgn_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            raw = pgn_path.read_bytes()
+            text = raw.decode("latin-1", errors="replace")
+
+        trace = analyse_game(text)
         if trace.size == 0:
             summary.append(f"{pgn_path.name}: invalid PGN")
             continue
@@ -122,7 +124,7 @@ def analyse_folder(pgn_dir: Path, *, make_plots: bool = True) -> None:
         )
         df.to_parquet(out_dir / f"{pgn_path.stem}.parquet")
 
-        if make_plots:
+        if make_plots and plt:
             plt.figure(figsize=(8, 5))
             plt.plot(df.move, df.complexity, marker="o")
             plt.title(pgn_path.stem)
@@ -139,10 +141,11 @@ def analyse_folder(pgn_dir: Path, *, make_plots: bool = True) -> None:
             f"primes {primes[:5]}… → {prime_vals[:5]} | {regression_summary(trace)}"
         )
 
-    (out_dir / "chess_summary.txt").write_text("\n".join(summary), encoding="utf-8")
+    (out_dir / "chess_summary.txt").write_text(
+        "\n".join(summary), encoding="utf-8"
+    )
     rich.print(f"[green]✔  Analysis complete. Results in {out_dir}[/]")
-
-
+    
 # ─── allow `python -m chessf.analysis` ─────────────────────────────────────────
-if __name__ == "__main__":  # pragma: no cover
-    analyse_folder(Path(__file__).resolve().parent.parent.parent / "data")
+if __name__ == "__main__":
+    analyse_folder(Path(__file__).resolve().parents[3] / "data")
