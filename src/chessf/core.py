@@ -1,9 +1,10 @@
 import chess.pgn
 import numpy as np
 import pandas as pd
-import cupy as xp            # xp = “array library” (GPU)
+try:
+    import cupy as xp          # GPU if available
 except ModuleNotFoundError:
-    import numpy as xp           # graceful CPU fallback
+    import numpy as xp         # CPU fallback
 
 from pathlib import Path
 
