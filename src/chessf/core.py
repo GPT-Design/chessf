@@ -1,12 +1,16 @@
 # src/chessf/core.py
-from pathlib import Path
-import chess.pgn
 
-# ---------- backend -------------------------------------------------
+# ─── array backend ─────────────────────────────────────────────────────────────
 try:
-    import cupy as xp
+    import cupy as xp          # try GPU acceleration
+    # Only keep CuPy if a CUDA-capable driver is present
+    try:
+        if not xp.is_available():
+            raise RuntimeError("CuPy is installed but no GPU available")
+    except Exception:
+        raise ModuleNotFoundError
 except ModuleNotFoundError:
-    import numpy as xp
+    import numpy as xp         # CPU fallback
 
 # ---------- single-game analysis -----------------------------------
 def calc_complexity(board) -> float:
