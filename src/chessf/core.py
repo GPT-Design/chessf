@@ -1,46 +1,29 @@
-import chess.pgn
-import numpy as np
-import pandas as pd
-try:
-    import cupy as xp          # GPU if available
-except ModuleNotFoundError:
-    import numpy as xp         # CPU fallback
-
+# src/chessf/core.py
 from pathlib import Path
+import chess.pgn
 
-# src/chessf/core.py  (no side-effects!)
+# ---------- backend -------------------------------------------------
+try:
+    import cupy as xp
+except ModuleNotFoundError:
+    import numpy as xp
 
-def calc_complexity(board):
-    import numpy as np
+# ---------- single-game analysis -----------------------------------
+def calc_complexity(board) -> float:
     legal = board.legal_moves.count() or 1
-    return np.log2(legal).item()
+    return xp.log2(legal).item()
 
-from .analysis import analyse_pgn    # ← wherever the real function lives
-__all__ = ["calc_complexity", "analyse_pgn"]
+def analyse_pgn(pgn_path: Path):
+    """Return a DataFrame with ply-by-ply complexity for *one* PGN."""
+    import pandas as pd
+    with open(pgn_path, "r", encoding="utf-8") as fh:
+        game = chess.pgn.read_game(fh)
 
-# --- keep optional heavy stuff out of global scope -------------
-def prime_regression(prime_moves, prime_values):
-    try:
-        from scipy.stats import linregress
-    except ModuleNotFoundError:  # pragma: no cover
-        raise ImportError(
-            "SciPy required for regression — install with: pip install chessf[stats]"
-        )
-    return linregress(prime_moves, prime_values)
-
-# --- Analysis ---
-def analyse_pgn(pgn_path: str | Path) -> pd.DataFrame:
-    game = chess.pgn.read_game(open(pgn_path))
     board = game.board()
-
     rows = []
     for ply, move in enumerate(game.mainline_moves(), start=1):
         board.push(move)
         rows.append(
-            {
-                "ply": ply,
-                "fen": board.fen(),
-                "complexity": calc_complexity(board),
-            }
+            {"ply": ply, "fen": board.fen(), "complexity": calc_complexity(board)}
         )
     return pd.DataFrame(rows)
