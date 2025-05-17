@@ -1,39 +1,41 @@
-[project]
+[tool.poetry]
 name = "chessf"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "GPT-Design",email = "gpt.design500@gmail.com"}
-]
+authors = ["GPT-Design <gpt.design500@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "python-chess (>=1.999,<2.0)",
-    "numpy (>=2.2.5,<3.0.0)",
-    "pandas (>=2.2.3,<3.0.0)",
-    "typer (>=0.15.3,<0.16.0)",
-    "rich (>=14.0.0,<15.0.0)",
-    "pyarrow (>=20.0.0,<21.0.0)",
-    "matplotlib (>=3.10.1,<4.0.0)",
-    "scipy (>=1.15.2,<2.0.0)",
-    "mpmath (>=1.3.0,<2.0.0)"
-]
+# Where your code lives:
+packages = [{ include = "chessf", from = "src" }]
 
-[tool.poetry]
-packages = [{include = "chessf", from = "src"}]
+# Runtime dependencies
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+python-chess = ">=1.999,<2.0"
+numpy = ">=2.2.5,<3.0.0"
+pandas = ">=2.2.3,<3.0.0"
+typer = ">=0.15.3,<0.16.0"
+rich = ">=14.0.0,<15.0.0"
+pyarrow = ">=20.0.0,<21.0.0"
+matplotlib = ">=3.10.1,<4.0.0"
+scipy = ">=1.15.2,<2.0.0"
+mpmath = ">=1.3.0,<2.0.0"
 
-[tool.poetry.scripts]
-chessf = "chessf.cli:app"
+# Optional extras
+[tool.poetry.extras]
+gpu = ["cupy-cuda12x"]
 
-[tool.poetry.group.dev.dependencies]
+# Dev-only dependencies
+[tool.poetry.dev-dependencies]
 pytest = "^8.3.5"
 ruff = "^0.11.7"
 mypy = "^1.15.0"
 pre-commit = "^4.2.0"
 
+[tool.poetry.scripts]
+chessf = "chessf.cli:app"
 
-[tool.poetry.group.optional.dependencies]
-cupy-cuda12x = "^13.4.1"
+[tool.poetry.group.dev.dependencies]
+pyinstaller = "^6.13.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
