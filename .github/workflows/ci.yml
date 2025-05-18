@@ -55,7 +55,8 @@ jobs:
                       --console
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3.1.1
+        # safest: stick to the major tag and pick up bug-fixes
+        uses: actions/upload-artifact@v3
         with:
           name: chessf-distribution
           path: |
