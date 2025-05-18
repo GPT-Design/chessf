@@ -62,4 +62,5 @@ jobs:
           path: |
             dist/*.whl
             dist/*.tar.gz
-            dist/chessf.exe
+            dist/chessf*          # works on Linux and Windows
+          if-no-files-found: warn # (optional) don’t fail the run
