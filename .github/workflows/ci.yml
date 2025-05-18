@@ -64,3 +64,10 @@ jobs:
             dist/*.tar.gz
             dist/chessf*          # works on Linux and Windows
           if-no-files-found: warn # (optional) don’t fail the run
+
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          POETRY_PYPI_TOKEN: ${{ secrets.POETRY_PYPI_TOKEN }}
+        run: poetry publish --username __token__ --password $POETRY_PYPI_TOKEN
+
