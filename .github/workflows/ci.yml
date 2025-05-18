@@ -45,7 +45,7 @@ jobs:
 
       - name: Build wheel & sdist
         run: |
-          poetry install --no-dev
+          poetry install --without dev
           poetry build
 
       - name: Build single-file executable
