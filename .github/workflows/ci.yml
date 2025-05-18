@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main]         # keep branch builds
+    tags:     ['v*']         # NEW – run on any tag starting with v
   pull_request:
 
 jobs:
