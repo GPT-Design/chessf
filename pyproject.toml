@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chessf"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["GPT-Design <gpt.design500@gmail.com>"]
 readme = "README.md"
